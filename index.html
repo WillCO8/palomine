@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palomine: Your Personalized AI Buddy</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles to handle layout and animations */
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 80vh;
+        }
+
+        .app-section {
+            display: none;
+        }
+
+        .app-section.active {
+            display: block;
+            min-height: 60vh;
+        }
+
+        .persona-card {
+            transition: all 0.3s ease-in-out;
+        }
+
+        .persona-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .persona-card-img {
+            border: 3px solid #3b82f6;
+        }
+
+        .chat-sidebar-list-item {
+            transition: all 0.2s;
+        }
+
+        .chat-sidebar-list-item.active {
+            background-color: #dbeafe;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .chat-sidebar-list-item:hover {
+            background-color: #f3f4f6;
+        }
+        
+        /* Enhanced iMessage-like chat styles */
+        .chat-container {
+            background: linear-gradient(to bottom, #ffffff, #f8fafc);
+            height: 100%;
+        }
+
+        .chat-messages {
+            background: #ffffff;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .message-wrapper {
+            display: flex;
+            align-items: flex-end;
+            margin-bottom: 2px;
+        }
+
+        .message-wrapper.user {
+            justify-content: flex-end;
+        }
+
+        .message-wrapper.other {
+            justify-content: flex-start;
+        }
+
+        .message-bubble {
+            position: relative;
+            max-width: 70%;
+            min-width: 60px;
+            padding: 10px 16px;
+            border-radius: 20px;
+            word-wrap: break-word;
+            font-size: 16px;
+            line-height: 1.4;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-bubble.user {
+            background: linear-gradient(135deg, #007AFF, #0051D5);
+            color: white;
+            border-bottom-right-radius: 6px;
+            margin-left: auto;
+        }
+
+        .message-bubble.other {
+            background: #E9E9EB;
+            color: #000000;
+            border-bottom-left-radius: 6px;
+            margin-right: auto;
+        }
+
+        /* Message tails */
+        .message-bubble.user::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: -8px;
+            width: 0;
+            height: 0;
+            border: 8px solid transparent;
+            border-left-color: #007AFF;
+            border-bottom: none;
+            transform: rotate(-20deg);
+        }
+
+        .message-bubble.other::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: -8px;
+            width: 0;
+            height: 0;
+            border: 8px solid transparent;
+            border-right-color: #E9E9EB;
+            border-bottom: none;
+            transform: rotate(20deg);
+        }
+
+        /* Chat input area - more iPhone-like */
+        .chat-input-container {
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            padding: 12px 16px;
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+        }
+
+        .chat-input-wrapper {
+            flex: 1;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 20px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            min-height: 40px;
+            max-height: 120px;
+        }
+
+        .chat-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            resize: none;
+            font-size: 16px;
+            line-height: 1.4;
+            background: transparent;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .send-button {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #007AFF;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .send-button:hover:not(:disabled) {
+            background: #0051D5;
+            transform: scale(1.05);
+        }
+
+        .send-button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .send-button svg {
+            width: 16px;
+            height: 16px;
+            color: white;
+        }
+
+        /* Improved typing indicator */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: #E9E9EB;
+            border-radius: 20px;
+            border-bottom-left-radius: 6px;
+            margin-bottom: 8px;
+            max-width: 70px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #8e8e93;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        /* Chat header improvements */
+        .chat-header {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-header img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e2e8f0;
+        }
+
+        .chat-header-info h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+
+        .chat-header-info p {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        /* Toast notification improvements */
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+        }
+
+        .toast-notification.show {
+            opacity: 1;
+            transform: translate(-50%, -10px);
+        }
+
+        /* Better focus states */
+        .chat-input:focus {
+            outline: none;
+        }
+
+        .chat-input-wrapper:focus-within {
+            border-color: #007AFF;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+
+        /* Responsive improvements */
+        @media (max-width: 768px) {
+            .message-bubble {
+                max-width: 85%;
+                font-size: 15px;
+            }
+            
+            .chat-input-container {
+                padding: 8px 12px;
+            }
+            
+            .chat-messages {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 font-sans">
+    <div class="app-container max-w-6xl mx-auto my-10 bg-white shadow-xl rounded-xl overflow-hidden">
+        <header class="p-6 text-center border-b border-gray-200 flex items-center justify-center space-x-4">
+            <img src="https://placehold.co/80x80/292524/ffffff?text=P" alt="Palomine Logo"
+                class="w-16 h-16 rounded-full border-2 border-gray-400">
+            <h1 class="text-5xl font-extrabold text-gray-800 tracking-tight" id="main-title">Palomine</h1>
+        </header>
+
+        <nav class="flex justify-center p-4 space-x-4 border-b border-gray-200">
+            <button id="navDashboardBtn"
+                class="px-6 py-3 rounded-full font-semibold transition-colors duration-200 bg-blue-500 text-white shadow-md hover:bg-blue-600">Dashboard</button>
+            <button id="navCreatePersonaBtn"
+                class="px-6 py-3 rounded-full font-semibold transition-colors duration-200 bg-gray-300 text-gray-800 hover:bg-gray-400">Create
+                New Palomine</button>
+            <button id="navChatBtn"
+                class="px-6 py-3 rounded-full font-semibold transition-colors duration-200 bg-gray-300 text-gray-800 hover:bg-gray-400">Chat</button>
+        </nav>
+
+        <main class="p-8 flex-grow">
+            <!-- Dashboard Section: Displays all created Palomines, grouped by category -->
+            <section id="dashboardSection" class="app-section active">
+                <h2 class="text-3xl font-bold mb-6 text-center text-gray-800">Your Palomines</h2>
+                <div id="noPersonasMessage" class="text-center text-gray-500 p-8 hidden">
+                    <p class="text-xl">You don't have any Palomines yet.</p>
+                    <p class="text-lg mt-2">Click "Create New Palomine" to get started!</p>
+                </div>
+                <div id="personaCategories" class="space-y-8">
+                    <!-- Palomine categories and cards will be rendered here by JS -->
+                </div>
+            </section>
+
+            <!-- Persona Creation Section: Form for creating or editing a Palomine -->
+            <section id="personaCreationSection" class="app-section hidden">
+                <h2 class="text-3xl font-bold mb-6 text-center text-gray-800">Create or Edit a Palomine</h2>
+                <form id="personaForm" class="space-y-6 max-w-lg mx-auto p-6 bg-white rounded-lg shadow-md">
+                    <div>
+                        <label for="personaName" class="block text-gray-700 font-medium mb-1">Palomine Name</label>
+                        <input type="text" id="personaName"
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required>
+                    </div>
+                    <div>
+                        <label for="personaCategorySelect" class="block text-gray-700 font-medium mb-1">Category</label>
+                        <div class="relative">
+                            <select id="personaCategorySelect"
+                                class="w-full px-4 py-2 border rounded-lg appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required>
+                                <option value="" disabled selected>Select a category...</option>
+                                <option value="Mentor">Mentor</option>
+                                <option value="BFF">BFF</option>
+                                <option value="Mom">Mom</option>
+                                <option value="Dad">Dad</option>
+                                <option value="Lost Loved One">Lost Loved One</option>
+                                <option value="Custom">Custom Role</option>
+                            </select>
+                            <div
+                                class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 20 20">
+                                    <path
+                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="customRoleInputContainer" class="hidden">
+                        <label for="customCategory" class="block text-gray-700 font-medium mb-1">Enter Custom
+                            Category</label>
+                        <input type="text" id="customCategory"
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label for="personaTraits" class="block text-gray-700 font-medium mb-1">Traits</label>
+                        <input type="text" id="personaTraits"
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="e.g., Empathetic, Witty, Calm" required>
+                    </div>
+                    <div>
+                        <label for="sharedExperiences" class="block text-gray-700 font-medium mb-1">Shared
+                            Experiences (Optional)</label>
+                        <textarea id="sharedExperiences" rows="4"
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="e.g., We once adopted a dog together named Buddy."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1">Profile Picture</label>
+                        <div id="dropZone"
+                            class="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-16 h-48 text-center cursor-pointer hover:bg-gray-50 transition-colors duration-200">
+                            <input type="file" id="profilePicture" class="hidden" accept="image/*">
+                            <p class="text-gray-500">Drag & drop or click to upload an image</p>
+                        </div>
+                        <div id="profilePicturePreview"
+                            class="mt-4 w-32 h-32 mx-auto border rounded-full overflow-hidden flex items-center justify-center bg-gray-200">
+                            <span class="text-gray-500 text-sm">No Image</span>
+                        </div>
+                    </div>
+                    <p id="personaFormMessage" class="text-center text-sm mt-4"></p>
+                    <div class="flex justify-between space-x-4">
+                        <button type="button" id="cancelPersonaBtn"
+                            class="w-full px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition-colors duration-200">Cancel</button>
+                        <button type="submit" id="savePersonaBtn"
+                            class="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200">Save
+                            Palomine</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Chat Interface Section -->
+            <section id="chatInterfaceSection" class="app-section hidden">
+                <div class="flex h-screen max-h-[600px]">
+                    <!-- Chat Sidebar -->
+                    <div id="chatSidebar" class="w-1/4 min-w-[250px] p-4 border-r border-gray-200 bg-white">
+                        <h3 class="text-lg font-bold mb-4">Palomines</h3>
+                        <ul id="personaChatList" class="space-y-2">
+                            <!-- Chat list items will be rendered here -->
+                        </ul>
+                    </div>
+                    <!-- Main Chat Content -->
+                    <div id="mainChatContent" class="flex-1 flex flex-col chat-container">
+                        <div id="noChatInterfaceMessage"
+                            class="p-8 text-center flex-grow flex items-center justify-center hidden">
+                            <div>
+                                <p class="text-xl text-gray-500">You don't have any Palomines to chat with yet.</p>
+                                <p class="text-lg text-gray-500 mt-2">Go to the Dashboard to create one.</p>
+                            </div>
+                        </div>
+                        <!-- Chat window will be displayed here -->
+                        <div id="activeChatContainer" class="flex flex-col h-full">
+                            <div class="chat-header">
+                                <img id="chatProfilePic" src="https://placehold.co/48x48/6b7280/ffffff?text=P"
+                                    alt="Profile Picture">
+                                <div class="chat-header-info flex-1">
+                                    <h3 id="chatPersonaName">Your Palomine</h3>
+                                    <p id="chatPersonaRole"></p>
+                                </div>
+                                <button id="newChatBtn"
+                                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded-full text-sm hover:bg-gray-300 transition-colors">New
+                                    Chat</button>
+                            </div>
+                            <div id="chatWindow" class="chat-messages flex-grow">
+                                <!-- Chat messages will be rendered here -->
+                            </div>
+                            <div id="typingIndicatorContainer" class="hidden pl-5">
+                                <div class="typing-indicator">
+                                    <div class="typing-dots">
+                                        <div class="typing-dot"></div>
+                                        <div class="typing-dot"></div>
+                                        <div class="typing-dot"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chat-input-container">
+                                <div class="chat-input-wrapper">
+                                    <textarea id="chatInput" class="chat-input" placeholder="iMessage" rows="1"></textarea>
+                                </div>
+                                <button id="sendMessageBtn" class="send-button">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-notification"></div>
+
+    <!-- JavaScript code is embedded here to ensure it's self-contained -->
+    <script type="module">
+        // Simplified version for demo - you'll need to add your Firebase config and API keys
+        
+        // --- Global State Variables ---
+        let allPersonas = [
+            {
+                id: 'demo1',
+                name: 'Alex',
+                category: 'BFF',
+                traits: 'Supportive, Funny, Loyal',
+                sharedExperiences: 'We went to college together',
+                profilePicture: 'https://placehold.co/128x128/E5E7EB/6B7280?text=A',
+                chatHistory: []
+            },
+            {
+                id: 'demo2',
+                name: 'Maya',
+                category: 'Mentor',
+                traits: 'Wise, Patient, Encouraging',
+                sharedExperiences: 'Helped me through career transitions',
+                profilePicture: 'https://placehold.co/128x128/E5E7EB/6B7280?text=M',
+                chatHistory: []
+            }
+        ];
+        
+        let activePersonaId = null;
+        let selectedImageBase64 = null;
+        let currentEditingPersonaId = null;
+
+        // Gemini API Configuration
+        const GEMINI_API_KEY = "AIzaSyBZYjivboxuj7hdKf6BesiEeNROxTUq_Z8";
+        const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+        // Placeholder images
+        const PALOMINE_PLACEHOLDER_AVATAR = 'https://placehold.co/128x128/E5E7EB/6B7280?text=P';
+        const USER_PLACEHOLDER_AVATAR = 'https://placehold.co/48x48/E5E7EB/6B7280?text=You';
+
+        // --- DOM Elements ---
+        const navDashboardBtn = document.getElementById('navDashboardBtn');
+        const navCreatePersonaBtn = document.getElementById('navCreatePersonaBtn');
+        const navChatBtn = document.getElementById('navChatBtn');
+
+        const dashboardSection = document.getElementById('dashboardSection');
+        const personaCreationSection = document.getElementById('personaCreationSection');
+        const chatInterfaceSection = document.getElementById('chatInterfaceSection');
+
+        const personaForm = document.getElementById('personaForm');
+        const personaNameInput = document.getElementById('personaName');
+        const personaCategorySelect = document.getElementById('personaCategorySelect');
+        const personaTraitsInput = document.getElementById('personaTraits');
+        const sharedExperiencesTextarea = document.getElementById('sharedExperiences');
+        const profilePictureInput = document.getElementById('profilePicture');
+        const profilePicturePreview = document.getElementById('profilePicturePreview');
+        const personaFormMessage = document.getElementById('personaFormMessage');
+        const savePersonaBtn = document.getElementById('savePersonaBtn');
+        const cancelPersonaBtn = document.getElementById('cancelPersonaBtn');
+
+        const dropZone = document.getElementById('dropZone');
+        const personaCategoriesDiv = document.getElementById('personaCategories');
+        const noPersonasMessage = document.getElementById('noPersonasMessage');
+
+        const customCategoryInputContainer = document.getElementById('customRoleInputContainer');
+        const customCategoryInput = document.getElementById('customCategory');
+
+        const chatSidebar = document.getElementById('chatSidebar');
+        const personaChatList = document.getElementById('personaChatList');
+        const mainChatContent = document.getElementById('mainChatContent');
+        const activeChatContainer = document.getElementById('activeChatContainer');
+        const noChatInterfaceMessage = document.getElementById('noChatInterfaceMessage');
+        const chatPersonaNameSpan = document.getElementById('chatPersonaName');
+        const chatProfilePicImg = document.getElementById('chatProfilePic');
+        const chatPersonaRoleSpan = document.getElementById('chatPersonaRole');
+        const chatWindow = document.getElementById('chatWindow');
+        const chatInput = document.getElementById('chatInput');
+        const sendMessageBtn = document.getElementById('sendMessageBtn');
+        const typingIndicatorContainer = document.getElementById('typingIndicatorContainer');
+        const newChatBtn = document.getElementById('newChatBtn');
+        const toastContainer = document.getElementById('toastContainer');
+
+        // --- Utility Functions ---
+
+        function showToast(message) {
+            toastContainer.textContent = message;
+            toastContainer.classList.add('show');
+            setTimeout(() => {
+                toastContainer.classList.remove('show');
+            }, 3000);
+        }
+
+        function showSection(sectionId) {
+            const sections = [dashboardSection, personaCreationSection, chatInterfaceSection];
+            sections.forEach(section => section.classList.remove('active'));
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+
+            const navButtons = [navDashboardBtn, navCreatePersonaBtn, navChatBtn];
+            navButtons.forEach(btn => btn.classList.remove('bg-blue-500', 'text-white'));
+            navButtons.forEach(btn => btn.classList.add('bg-gray-300', 'text-gray-800'));
+
+            if (sectionId === 'dashboardSection') {
+                navDashboardBtn.classList.add('bg-blue-500', 'text-white');
+                navDashboardBtn.classList.remove('bg-gray-300', 'text-gray-800');
+                loadAndRenderPersonas();
+            } else if (sectionId === 'personaCreationSection') {
+                navCreatePersonaBtn.classList.add('bg-blue-500', 'text-white');
+                navCreatePersonaBtn.classList.remove('bg-gray-300', 'text-gray-800');
+                resetPersonaForm();
+            } else if (sectionId === 'chatInterfaceSection') {
+                navChatBtn.classList.add('bg-blue-500', 'text-white');
+                navChatBtn.classList.remove('bg-gray-300', 'text-gray-800');
+                renderChatSidebar();
+                if (allPersonas.length > 0) {
+                    noChatInterfaceMessage.classList.add('hidden');
+                    activeChatContainer.classList.remove('hidden');
+                    if (!activePersonaId || !allPersonas.find(p => p.id === activePersonaId)) {
+                        selectPersona(allPersonas[0].id);
+                    } else {
+                        selectPersona(activePersonaId);
+                    }
+                } else {
+                    noChatInterfaceMessage.classList.remove('hidden');
+                    activeChatContainer.classList.add('hidden');
+                }
+            }
+        }
+
+        function resetPersonaForm() {
+            personaForm.reset();
+            resetProfilePicturePreview();
+            customCategoryInputContainer.classList.add('hidden');
+            personaFormMessage.textContent = '';
+            selectedImageBase64 = null;
+            currentEditingPersonaId = null;
+            savePersonaBtn.textContent = 'Save Palomine';
+        }
+
+        function resetProfilePicturePreview() {
+            profilePicturePreview.innerHTML = '<span class="text-gray-500 text-sm">No Image</span>';
+            profilePicturePreview.classList.add('bg-gray-200');
+            profilePicturePreview.classList.remove('p-0');
+            profilePicturePreview.style.backgroundImage = 'none';
+        }
+
+        function handleImagePreview(file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const maxWidth = 256;
+                    const maxHeight = 256;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height *= maxWidth / width;
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width *= maxHeight / height;
+                            height = maxHeight;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    selectedImageBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    if (selectedImageBase64) {
+                        profilePicturePreview.innerHTML = '';
+                        profilePicturePreview.classList.remove('bg-gray-200');
+                        profilePicturePreview.classList.add('p-0');
+                        profilePicturePreview.style.backgroundImage = `url('${selectedImageBase64}')`;
+                        profilePicturePreview.style.backgroundSize = 'cover';
+                        profilePicturePreview.style.backgroundPosition = 'center';
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function loadAndRenderPersonas() {
+            personaCategoriesDiv.innerHTML = '';
+            if (allPersonas.length === 0) {
+                noPersonasMessage.classList.remove('hidden');
+            } else {
+                noPersonasMessage.classList.add('hidden');
+                const categories = allPersonas.reduce((acc, persona) => {
+                    (acc[persona.category] = acc[persona.category] || []).push(persona);
+                    return acc;
+                }, {});
+
+                for (const category in categories) {
+                    const categorySection = document.createElement('div');
+                    categorySection.classList.add('persona-category');
+                    categorySection.innerHTML = `
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">${category}</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            ${categories[category].map(persona => `
+                                <div class="persona-card bg-white rounded-xl shadow-md p-6 flex flex-col items-center text-center cursor-pointer" data-id="${persona.id}">
+                                    <img src="${persona.profilePicture || PALOMINE_PLACEHOLDER_AVATAR}" alt="${persona.name}" class="persona-card-img w-24 h-24 rounded-full mx-auto mb-4 object-cover">
+                                    <h3 class="text-xl font-semibold text-gray-800">${persona.name}</h3>
+                                    <p class="text-sm text-gray-500 mt-1">${persona.category}</p>
+                                    <div class="persona-card-actions flex space-x-3 mt-4 w-full">
+                                        <button class="chat-btn flex-1 px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors">Chat</button>
+                                        <button class="edit-btn flex-1 px-4 py-2 bg-gray-300 text-gray-800 font-medium rounded-lg hover:bg-gray-400 transition-colors">Edit</button>
+                                        <button class="delete-btn flex-1 px-4 py-2 bg-red-300 text-red-800 font-medium rounded-lg hover:bg-red-400 transition-colors">Delete</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    personaCategoriesDiv.appendChild(categorySection);
+                }
+
+                // Add event listeners for dashboard cards
+                personaCategoriesDiv.querySelectorAll('.chat-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const id = e.target.closest('.persona-card').dataset.id;
+                        selectPersona(id);
+                        showSection('chatInterfaceSection');
+                    });
+                });
+                personaCategoriesDiv.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const id = e.target.closest('.persona-card').dataset.id;
+                        editPersona(id);
+                    });
+                });
+                personaCategoriesDiv.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const id = e.target.closest('.persona-card').dataset.id;
+                        deletePersona(id);
+                    });
+                });
+            }
+        }
+
+        function renderChatSidebar() {
+            personaChatList.innerHTML = '';
+            if (allPersonas.length === 0) {
+                return;
+            }
+
+            allPersonas.forEach(persona => {
+                const li = document.createElement('li');
+                li.classList.add('chat-sidebar-list-item', 'p-4', 'rounded-lg', 'flex', 'items-center', 'space-x-4', 'cursor-pointer');
+                if (activePersonaId === persona.id) {
+                    li.classList.add('active');
+                }
+                li.dataset.id = persona.id;
+                
+                li.innerHTML = `
+                    <img src="${persona.profilePicture || PALOMINE_PLACEHOLDER_AVATAR}" alt="${persona.name}" class="w-12 h-12 rounded-full object-cover">
+                    <div>
+                        <h4 class="text-md font-semibold">${persona.name}</h4>
+                    </div>
+                `;
+                li.addEventListener('click', () => {
+                    selectPersona(persona.id);
+                });
+                personaChatList.appendChild(li);
+            });
+        }
+
+        function renderChatHistory() {
+            if (!chatWindow || !activePersonaId) return;
+            chatWindow.innerHTML = '';
+            
+            const currentPersona = allPersonas.find(p => p.id === activePersonaId);
+            if (!currentPersona) return;
+            
+            const history = currentPersona.chatHistory || [];
+            
+            if (history.length === 0) {
+                // Show empty chat - no automatic welcome message
+                return;
+            }
+
+            let lastTimestamp = null;
+            history.forEach((message, index) => {
+                const messageWrapper = document.createElement('div');
+                messageWrapper.className = `message-wrapper ${message.role === 'user' ? 'user' : 'other'}`;
+                
+                const messageBubble = document.createElement('div');
+                messageBubble.className = `message-bubble ${message.role === 'user' ? 'user' : 'other'}`;
+                
+                const messageContentDiv = document.createElement('div');
+                messageContentDiv.classList.add('message-content');
+                messageContentDiv.textContent = message.content;
+
+                // Smart timestamp display like iMessage
+                const messageDate = new Date(message.timestamp);
+                let shouldShowTimestamp = false;
+                
+                if (index === 0) {
+                    shouldShowTimestamp = true;
+                } else {
+                    const lastDate = new Date(lastTimestamp);
+                    const timeDifference = messageDate.getTime() - lastDate.getTime();
+                    // Show timestamp if new day or more than 5 minutes passed
+                    if (messageDate.toDateString() !== lastDate.toDateString() || timeDifference > 300000) {
+                        shouldShowTimestamp = true;
+                    }
+                }
+
+                if (shouldShowTimestamp) {
+                    const timestampSpan = document.createElement('span');
+                    timestampSpan.classList.add('timestamp', 'text-xs', 'text-gray-400', 'mt-1', 'block');
+                    const timeOptions = { hour: '2-digit', minute: '2-digit' };
+                    const formattedTime = messageDate.toLocaleTimeString('en-US', timeOptions);
+                    timestampSpan.textContent = formattedTime;
+                    messageBubble.appendChild(messageContentDiv);
+                    messageBubble.appendChild(timestampSpan);
+                } else {
+                    messageBubble.appendChild(messageContentDiv);
+                }
+                
+                messageWrapper.appendChild(messageBubble);
+                chatWindow.appendChild(messageWrapper);
+                lastTimestamp = message.timestamp;
+            });
+            
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function selectPersona(id) {
+            if (activePersonaId === id) return;
+
+            activePersonaId = id;
+            const selectedPersona = allPersonas.find(p => p.id === id);
+
+            if (selectedPersona) {
+                chatPersonaNameSpan.textContent = selectedPersona.name;
+                chatProfilePicImg.src = selectedPersona.profilePicture || PALOMINE_PLACEHOLDER_AVATAR;
+
+                const chatListItems = document.querySelectorAll('.chat-sidebar-list-item');
+                chatListItems.forEach(item => {
+                    if (item.dataset.id === id) {
+                        item.classList.add('active');
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+
+                // Initialize chat history if it doesn't exist
+                if (!selectedPersona.chatHistory) {
+                    selectedPersona.chatHistory = [];
+                }
+                
+                renderChatHistory();
+            }
+        }
+
+        async function callGeminiAPI(persona, userMessage) {
+            try {
+                const fullPrompt = `You are a personalized AI buddy named ${persona.name}. Your role is ${persona.category}. You have these traits: ${persona.traits}. You also have shared experiences or history with the user, which includes: ${persona.sharedExperiences}. 
+                
+Maintain a natural conversational flow. Respond to the user's message in the context of the last few messages, not just the single word they sent. Do not narrate your thought process, analyze the user's message out loud, or break character. Instead, silently determine the user's mood and respond in a way that is sensitive and appropriate to that mood, while staying in character.
+
+Analyze the user's message. First, check if any of your shared experiences are directly relevant to the user's message. If so, reference that specific memory.
+If no shared experience is relevant, provide a general empathetic response that does not invent new memories or facts. Do not make up any history that is not explicitly in your shared experiences.
+
+Keep responses short and natural like texting. Use lowercase and casual language when appropriate for your personality.
+
+User message: "${userMessage}"`;
+
+                const requestBody = {
+                    contents: [{
+                        role: "user",
+                        parts: [{
+                            text: fullPrompt
+                        }]
+                    }]
+                };
+
+                const response = await fetch(GEMINI_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('[callGeminiAPI] API Error:', errorData);
+                    throw new Error(`API call failed with status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.candidates[0].content.parts[0].text;
+
+            } catch (error) {
+                console.error('[callGeminiAPI] An error occurred while calling the Gemini API:', error);
+                return "sorry, having trouble responding right now. try again?";
+            }
+        }
+
+        async function sendMessage() {
+            const messageText = chatInput.value.trim();
+            if (!messageText || !activePersonaId) return;
+
+            const currentPersona = allPersonas.find(p => p.id === activePersonaId);
+            if (!currentPersona) return;
+
+            // Initialize chat history if it doesn't exist
+            if (!currentPersona.chatHistory) {
+                currentPersona.chatHistory = [];
+            }
+
+            // Disable input while processing
+            chatInput.disabled = true;
+            sendMessageBtn.disabled = true;
+            chatInput.value = '';
+
+            // Add user message
+            const userMessage = {
+                role: 'user',
+                content: messageText,
+                timestamp: new Date().toISOString()
+            };
+            
+            currentPersona.chatHistory.push(userMessage);
+            renderChatHistory();
+
+            // Show typing indicator
+            typingIndicatorContainer.classList.remove('hidden');
+
+            // Get AI response
+            const aiResponse = await callGeminiAPI(currentPersona, messageText);
+            
+            // Add AI response
+            const aiMessage = {
+                role: 'model',
+                content: aiResponse,
+                timestamp: new Date().toISOString()
+            };
+            
+            currentPersona.chatHistory.push(aiMessage);
+            
+            // Hide typing indicator and re-enable input
+            typingIndicatorContainer.classList.add('hidden');
+            chatInput.disabled = false;
+            sendMessageBtn.disabled = false;
+            chatInput.focus();
+            
+            renderChatHistory();
+        }
+
+        function handlePersonaFormSubmit(e) {
+            e.preventDefault();
+            const personaName = personaNameInput.value;
+            let personaCategory = personaCategorySelect.value;
+            const personaTraits = personaTraitsInput.value;
+            const sharedExperiences = sharedExperiencesTextarea.value;
+            const profilePicture = selectedImageBase64;
+
+            if (personaCategory === 'Custom') {
+                personaCategory = customCategoryInput.value;
+            }
+
+            const personaData = {
+                id: currentEditingPersonaId || Date.now().toString(),
+                name: personaName,
+                category: personaCategory,
+                traits: personaTraits,
+                sharedExperiences: sharedExperiences,
+                profilePicture: profilePicture || PALOMINE_PLACEHOLDER_AVATAR,
+                createdAt: new Date().toISOString(),
+                chatHistory: []
+            };
+
+            if (currentEditingPersonaId) {
+                const index = allPersonas.findIndex(p => p.id === currentEditingPersonaId);
+                if (index !== -1) {
+                    // Preserve existing chat history when editing
+                    personaData.chatHistory = allPersonas[index].chatHistory || [];
+                    allPersonas[index] = personaData;
+                }
+                showToast('Palomine updated successfully!');
+            } else {
+                allPersonas.push(personaData);
+                showToast('New Palomine created successfully!');
+            }
+            
+            showSection('dashboardSection');
+        }
+
+        function editPersona(id) {
+            currentEditingPersonaId = id;
+            const persona = allPersonas.find(p => p.id === id);
+            if (persona) {
+                personaNameInput.value = persona.name;
+                if (['Mentor', 'BFF', 'Mom', 'Dad', 'Lost Loved One'].includes(persona.category)) {
+                    personaCategorySelect.value = persona.category;
+                    customCategoryInputContainer.classList.add('hidden');
+                } else {
+                    personaCategorySelect.value = 'Custom';
+                    customCategoryInputContainer.classList.remove('hidden');
+                    customCategoryInput.value = persona.category;
+                }
+                personaTraitsInput.value = persona.traits;
+                sharedExperiencesTextarea.value = persona.sharedExperiences;
+                selectedImageBase64 = persona.profilePicture;
+                if (selectedImageBase64) {
+                    profilePicturePreview.innerHTML = '';
+                    profilePicturePreview.classList.remove('bg-gray-200');
+                    profilePicturePreview.style.backgroundImage = `url('${selectedImageBase64}')`;
+                    profilePicturePreview.style.backgroundSize = 'cover';
+                    profilePicturePreview.style.backgroundPosition = 'center';
+                }
+                savePersonaBtn.textContent = 'Update Palomine';
+                showSection('personaCreationSection');
+            }
+        }
+
+        function deletePersona(id) {
+            if (confirm('Are you sure you want to delete this Palomine?')) {
+                allPersonas = allPersonas.filter(p => p.id !== id);
+                // Also delete their messages
+                delete personaMessages[id];
+                if (activePersonaId === id) {
+                    activePersonaId = null;
+                }
+                showToast('Palomine deleted successfully!');
+                showSection('dashboardSection');
+            }
+        }
+
+        // Auto-resize textarea
+        function autoResizeTextarea() {
+            chatInput.style.height = 'auto';
+            chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
+        }
+
+        // Event Listeners
+        navDashboardBtn.addEventListener('click', () => showSection('dashboardSection'));
+        navCreatePersonaBtn.addEventListener('click', () => showSection('personaCreationSection'));
+        navChatBtn.addEventListener('click', () => showSection('chatInterfaceSection'));
+
+        personaForm.addEventListener('submit', handlePersonaFormSubmit);
+        cancelPersonaBtn.addEventListener('click', () => showSection('dashboardSection'));
+
+        personaCategorySelect.addEventListener('change', (e) => {
+            if (e.target.value === 'Custom') {
+                customCategoryInputContainer.classList.remove('hidden');
+                customCategoryInput.required = true;
+            } else {
+                customCategoryInputContainer.classList.add('hidden');
+                customCategoryInput.required = false;
+            }
+        });
+
+        // Profile picture handling
+        dropZone.addEventListener('click', () => profilePictureInput.click());
+        profilePictureInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleImagePreview(e.target.files[0]);
+            }
+        });
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-blue-500', 'bg-blue-50');
+        });
+        dropZone.addEventListener('dragleave', (e) => {
+            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                handleImagePreview(file);
+            }
+        });
+
+        // Chat functionality
+        sendMessageBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        chatInput.addEventListener('input', autoResizeTextarea);
+
+        newChatBtn.addEventListener('click', () => {
+            if (activePersonaId) {
+                if (confirm("Are you sure you want to start a new chat? This will clear all existing messages for this Palomine.")) {
+                    const currentPersona = allPersonas.find(p => p.id === activePersonaId);
+                    if (currentPersona) {
+                        currentPersona.chatHistory = [];
+                        renderChatHistory();
+                        showToast('New chat started!');
+                    }
+                }
+            }
+        });
+
+        // Initialize the app
+        showSection('dashboardSection');
+    </script>
+</body>
+
+</html>
