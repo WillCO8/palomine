@@ -1,4 +1,4 @@
-# 🤖 Palomine: Your Personalized AI Companion
+# 🤖 **Palomine *(Palomine = Pal of Mine)***
 
 **Slogan:** *Not just an AI. Your pal. Your way.*
 
@@ -70,9 +70,9 @@ Whether you’re seeking a spark of motivation, emotional support, or just someo
 
 ## 🚀 Getting Started (Developers)
 
-1. Clone this repo
-2. Open `index.html` in your browser (no server needed!)
-3. Start chatting with your customized AI pal
+1. Clone this repo  
+2. Open `index.html` in your browser (no server needed!)  
+3. Start chatting with your customized AI pal  
 
 ---
 
@@ -89,12 +89,12 @@ Whether you’re seeking a spark of motivation, emotional support, or just someo
 
 ## 🔮 Future Potential
 
-- **iMessage Integration** – Chat with your Palomine directly in iMessage
-- **Text-to-Speech / Voice Interaction** – Hear your Palomine speak for deeper emotional resonance
-- **Scheduled Check-ins** – Let your Palomine reach out on birthdays, milestones, or hard days
-- **Cloud Sync & Backup** – Keep your companions across devices
-- **Sentiment & Emotion Detection** – Adaptive responses based on your emotional tone
-- **Enhanced “Digital Echo” Mode** – Feed the AI real writing samples, messages, or quotes from a loved one, allowing Palomine to softly mirror their voice and manner of speaking — offering comfort through emotional memory
+- **iMessage Integration** – Chat with your Palomine directly in iMessage  
+- **Text-to-Speech / Voice Interaction** – Hear your Palomine speak for deeper emotional resonance  
+- **Scheduled Check-ins** – Let your Palomine reach out on birthdays, milestones, or hard days  
+- **Cloud Sync & Backup** – Keep your companions across devices  
+- **Sentiment & Emotion Detection** – Adaptive responses based on your emotional tone  
+- **Enhanced “Digital Echo” Mode** – Feed the AI real writing samples, messages, or quotes from a loved one, allowing Palomine to softly mirror their voice and manner of speaking — offering comfort through emotional memory  
 
 ---
 
