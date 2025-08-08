@@ -25,7 +25,7 @@ You choose the type of connection — *Mom, Dad, BFF, Coach, Mentor, Lost Loved 
 
 Whether you’re seeking a spark of motivation, emotional support, or just someone to talk to, **Palomine meets you there.**
 
-🔗 **Live Demo:** [https://willco8.github.io/palomine](https://willco8.github.io/palomine)
+🔗 **Live Demo:** [https://williamchonortega.github.io/palomine](https://williamchonortega.github.io/palomine)
 
 ---
 
